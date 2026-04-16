@@ -1,0 +1,28 @@
+# Dependencias
+/node_modules
+/vendor
+/bin
+/obj
+
+# Bases de datos y archivos locales
+*.db
+*.sqlite
+.env
+
+# Archivos del sistema y temporales
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Entorno de desarrollo
+.vscode/
+.idea/
+.xampp/

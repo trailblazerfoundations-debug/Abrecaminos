@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivero Abre Caminos | Naturaleza en tu Hogar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header>
+        <div class="container nav-content">
+            <a href="index.html" class="logo">
+                <i data-lucide="leaf"></i>
+                Vivero Abre Caminos
+            </a>
+            <nav style="display: flex; gap: 30px; align-items: center;">
+                <a href="#catalogo" style="text-decoration: none; color: var(--text-main); font-weight: 500;">Catálogo</a>
+                <a href="admin.html" style="text-decoration: none; color: var(--text-muted); font-size: 0.9rem;">Acceso Admin</a>
+                <div id="cart-trigger" style="position: relative; cursor: pointer;">
+                    <i data-lucide="shopping-cart"></i>
+                    <span id="cart-count" style="position: absolute; top: -8px; right: -8px; background: var(--accent); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; display: flex; align-items: center; justify-content: center;">0</span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="reveal" style="padding: 60px 0; background: white;">
+            <div class="container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;">
+                <div>
+                    <h1 style="font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px;">Transforma tu entorno con <span style="color: var(--primary-light);">vida orgánica</span>.</h1>
+                    <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px;">Plantas de interior, exterior y todo lo necesario para que tu jardín florezca. Calidad garantizada en el corazón de Honduras.</p>
+                    <a href="#catalogo" class="btn btn-primary" style="padding: 15px 35px; font-size: 1.1rem;">Ver Catálogo</a>
+                </div>
+                <div>
+                    <img src="images/hero.png" alt="Vivero" style="width: 100%; border-radius: 20px; box-shadow: 20px 20px 60px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+        </section>
+
+        <!-- Catalog Filters -->
+        <section id="catalogo" class="container" style="padding: 80px 0 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+                <div>
+                    <h2 style="font-size: 2rem;">Nuestro Catálogo</h2>
+                    <p style="color: var(--text-muted);">Explora nuestra selección cuidadosamente curada.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="filter-btn active" data-category="all">Todos</button>
+                    <button class="filter-btn" data-category="interior">Interior</button>
+                    <button class="filter-btn" data-category="exterior">Exterior</button>
+                    <button class="filter-btn" data-category="herramientas">Herramientas</button>
+                </div>
+            </div>
+
+            <div id="product-grid" class="product-grid">
+                <!-- Products will be injected here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Cart Drawer -->
+    <div id="cart-drawer" style="position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background: white; box-shadow: -10px 0 40px rgba(0,0,0,0.1); z-index: 200; transition: right 0.3s ease; padding: 40px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h3>Tu Carrito</h3>
+            <i data-lucide="x" id="close-cart" style="cursor: pointer;"></i>
+        </div>
+        <div id="cart-items" style="flex: 1; overflow-y: auto;">
+            <!-- Cart items -->
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <span>Total Estimado</span>
+                <span id="cart-total" style="font-weight: 700; font-size: 1.2rem;">L. 0.00</span>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; padding: 15px;">Finalizar Consulta</button>
+        </div>
+    </div>
+
+    <style>
+        .filter-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+    </style>
+
+    <script src="js/store.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
