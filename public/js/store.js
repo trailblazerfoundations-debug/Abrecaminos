@@ -320,6 +320,21 @@ if (chkDepto) {
         
         const waLink = `https://wa.me/50499999999?text=${encodeURIComponent(message)}`;
         
+        // Guardar la orden globalmente
+        const currentOrders = JSON.parse(localStorage.getItem('vivero_orders') || '[]');
+        const newOrder = {
+            id: 'WEB-' + Date.now().toString().slice(-4),
+            date: new Date().toISOString(),
+            origin: 'Web',
+            seller: 'Tienda en Línea',
+            client: name,
+            total: total,
+            items: [...cart],
+            status: 'Pendiente'
+        };
+        currentOrders.push(newOrder);
+        localStorage.setItem('vivero_orders', JSON.stringify(currentOrders));
+
         // Vaciamos el carrito tras generar la orden
         cart = [];
         saveCart();

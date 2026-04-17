@@ -17,6 +17,10 @@ navLinks.forEach(link => {
 
         if (targetView === 'shipping') {
             renderShipping();
+        } else if (targetView === 'sales') {
+            renderPOS();
+        } else if (targetView === 'sales-registry') {
+            renderSalesRegistry();
         }
     });
 });
@@ -956,3 +960,230 @@ shippingStatusForm.addEventListener('submit', (e) => {
     closeShippingModal();
     renderShipping();
 });
+
+// --- Módulo POS (Punto de Venta) ---
+let posCart = [];
+
+function renderPOS() {
+    const sellerSelect = document.getElementById('pos-seller');
+    if(sellerSelect && sellerSelect.options.length <= 1) {
+        sellerSelect.innerHTML = '<option value="">Seleccione Vendedor...</option>';
+        sellers.forEach(s => {
+            if(s.status === 'Activo') {
+                sellerSelect.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+            }
+        });
+    }
+
+    const grid = document.getElementById('pos-products-grid');
+    if(!grid) return;
+    
+    grid.innerHTML = '';
+    
+    // Usamos el inventario global filtrado predeterminado o simplemente iteramos todo.
+    inventory.forEach(item => {
+        const div = document.createElement('div');
+        div.style.border = '1px solid var(--border)';
+        div.style.padding = '15px 10px';
+        div.style.borderRadius = '12px';
+        div.style.cursor = 'pointer';
+        div.style.textAlign = 'center';
+        div.style.transition = 'all 0.2s';
+        div.style.background = 'white';
+        div.onmouseover = () => div.style.borderColor = 'var(--primary)';
+        div.onmouseout = () => div.style.borderColor = 'var(--border)';
+        
+        div.innerHTML = `
+            <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; color: var(--text-main);">${item.name}</div>
+            <div style="color: var(--primary); font-size: 1.1rem; font-weight: 700; margin-bottom: 5px;">L. ${item.price.toFixed(2)}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); background: #f0f0f0; border-radius: 20px; padding: 2px 8px; display: inline-block;">Stock: ${item.stock}</div>
+        `;
+        div.addEventListener('click', () => addToPOSCart(item));
+        grid.appendChild(div);
+    });
+
+    renderPOSCart();
+}
+
+function addToPOSCart(product) {
+    if(product.stock <= 0) return alert('¡Producto sin stock disponible!');
+    
+    // El inventario no tiene ID único real, usamos el nombre como key
+    const existing = posCart.find(i => i.name === product.name);
+    if(existing) {
+        if(existing.quantity < product.stock) {
+            existing.quantity++;
+        } else {
+            alert('Límite de stock alcanzado para este producto.');
+        }
+    } else {
+        posCart.push({ ...product, quantity: 1 });
+    }
+    renderPOSCart();
+}
+
+function renderPOSCart() {
+    const list = document.getElementById('pos-cart-items');
+    if(!list) return;
+    
+    list.innerHTML = '';
+    let total = 0;
+    
+    if(posCart.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:30px;">Agregue productos tocíandolos en la grilla izquierda</p>';
+    }
+    
+    posCart.forEach((item, idx) => {
+        total += item.price * item.quantity;
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.marginBottom = '12px';
+        div.style.padding = '12px';
+        div.style.background = '#fcfdfc';
+        div.style.border = '1px solid var(--border)';
+        div.style.borderRadius = '10px';
+        
+        div.innerHTML = `
+            <div style="font-size:0.95rem; font-weight: 500; line-height: 1.4;">
+                <div style="color: var(--text-main);">${item.name}</div>
+                <div style="color: var(--primary); font-weight: 600;">L. ${item.price.toFixed(2)}</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; background: white; border: 1px solid var(--border); padding: 4px; border-radius: 8px;">
+                <button onclick="updatePOSQty(${idx}, -1)" style="border:none; background:#f0f0f0; border-radius:4px; width:24px; height:24px; cursor:pointer;" class="btn-hover">-</button>
+                <span style="min-width: 16px; text-align: center; font-weight: 600;">${item.quantity}</span>
+                <button onclick="updatePOSQty(${idx}, 1)" style="border:none; background:#f0f0f0; border-radius:4px; width:24px; height:24px; cursor:pointer;" class="btn-hover">+</button>
+                <button onclick="updatePOSQty(${idx}, 'remove')" style="border:none; background:#ffebeb; color:#d32f2f; border-radius:4px; width:24px; height:24px; margin-left: 5px; cursor:pointer;" class="btn-hover">✕</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+    
+    document.getElementById('pos-subtotal').textContent = `L. ${total.toFixed(2)}`;
+    document.getElementById('pos-total').textContent = `L. ${total.toFixed(2)}`;
+}
+
+window.updatePOSQty = function(idx, action) {
+    if (action === 'remove') posCart.splice(idx, 1);
+    else {
+        const item = posCart[idx];
+        const inventoryItem = inventory.find(i => i.name === item.name);
+        
+        item.quantity += action;
+        if(item.quantity <= 0) posCart.splice(idx, 1);
+        else if(item.quantity > inventoryItem.stock) item.quantity = inventoryItem.stock;
+    }
+    renderPOSCart();
+};
+
+const btnCompletePos = document.getElementById('btn-complete-pos');
+if(btnCompletePos) {
+    btnCompletePos.addEventListener('click', () => {
+        if(posCart.length === 0) return alert('¡El carrito está vacío!');
+        
+        const seller = document.getElementById('pos-seller').value;
+        if(!seller) return alert('⚠️ Por favor seleccione el Vendedor antes de cobrar.');
+        
+        const client = document.getElementById('pos-client').value.trim() || 'Consumidor Final';
+        const total = posCart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+        
+        // Guardar Orden Globalmente
+        const currentOrders = JSON.parse(localStorage.getItem('vivero_orders') || '[]');
+        currentOrders.push({
+            id: 'POS-' + Date.now().toString().slice(-4),
+            date: new Date().toISOString(),
+            origin: 'POS',
+            seller: seller,
+            client: client,
+            total: total,
+            items: [...posCart],
+            status: 'Completada'
+        });
+        localStorage.setItem('vivero_orders', JSON.stringify(currentOrders));
+        
+        // Descontar inventario real
+        posCart.forEach(pItem => {
+            let invItem = inventory.find(i => i.name === pItem.name);
+            if(invItem) {
+                invItem.stock -= pItem.quantity;
+            }
+        });
+        renderInventory(); // Actualizar tabla global
+        
+        // Limpiar Carrito
+        posCart = [];
+        document.getElementById('pos-client').value = '';
+        renderPOSCart();
+        
+        // Refrescar Registro de Ventas si está cargado
+        renderSalesRegistry();
+        
+        alert('✅ ¡Venta Completada Correctamente!');
+    });
+}
+
+
+// --- Módulo Registro de Ventas ---
+function renderSalesRegistry() {
+    const list = document.getElementById('sales-registry-list');
+    const filterOriginSelect = document.getElementById('filter-registry-origin');
+    
+    if(!list) return;
+    list.innerHTML = '';
+    
+    const filterOrigin = filterOriginSelect ? filterOriginSelect.value : 'Todos';
+    let orders = JSON.parse(localStorage.getItem('vivero_orders') || '[]');
+    
+    // Sort orders by date descending
+    orders.sort((a,b) => new Date(b.date) - new Date(a.date));
+    
+    if(filterOrigin !== 'Todos') {
+        orders = orders.filter(o => o.origin === filterOrigin);
+    }
+    
+    let totalWeb = 0;
+    let totalPOS = 0;
+    
+    // Calcular globales completos (ignorando filtro para KPIs, solo para contexto total)
+    const allOrders = JSON.parse(localStorage.getItem('vivero_orders') || '[]');
+    allOrders.forEach(o => {
+        if(o.origin === 'Web') totalWeb += o.total;
+        if(o.origin === 'POS') totalPOS += o.total;
+    });
+    
+    document.getElementById('kpi-sales-web').textContent = `L. ${totalWeb.toFixed(2)}`;
+    document.getElementById('kpi-sales-pos').textContent = `L. ${totalPOS.toFixed(2)}`;
+    document.getElementById('kpi-sales-global').textContent = `L. ${(totalWeb + totalPOS).toFixed(2)}`;
+
+    if(orders.length === 0) {
+        list.innerHTML = `<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 1.1rem;">No hay ventas registradas en esta categoría.</td></tr>`;
+        return;
+    }
+    
+    orders.forEach(order => {
+        let originBadge = order.origin === 'Web' 
+            ? '<span style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;"><i data-lucide="globe" style="width:12px; height:12px; display:inline-block; margin-right:4px;"></i>Web</span>' 
+            : '<span style="background: #333; color: white; padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;"><i data-lucide="store" style="width:12px; height:12px; display:inline-block; margin-right:4px;"></i>POS</span>';
+        
+        const dateObj = new Date(order.date);
+        const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #f0f0f0';
+        tr.innerHTML = `
+            <td style="padding: 18px; font-weight: 700; color: var(--text-main); font-size: 0.95rem;">${order.id}</td>
+            <td style="padding: 18px; color: var(--text-muted); font-size: 0.9rem;">${dateStr}</td>
+            <td style="padding: 18px;">${originBadge}</td>
+            <td style="padding: 18px; font-weight: 500;">${order.client}</td>
+            <td style="padding: 18px; color: var(--text-muted);">${order.seller}</td>
+            <td style="padding: 18px; font-weight: 700; color: var(--primary); font-size: 1.05rem;">L. ${order.total.toFixed(2)}</td>
+        `;
+        list.appendChild(tr);
+    });
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+const filterRegistryOrigin = document.getElementById('filter-registry-origin');
+if(filterRegistryOrigin) filterRegistryOrigin.addEventListener('change', renderSalesRegistry);
