@@ -214,5 +214,123 @@ window.removeFromCart = (id) => {
     updateCartUI();
 };
 
-init();
+const hnLocations = {
+    "Atlántida": ["La Ceiba", "Tela", "Jutiapa", "El Porvenir", "San Francisco"],
+    "Choluteca": ["Choluteca", "Marcovia", "Pespire", "San Marcos de Colón", "Namigüe"],
+    "Colón": ["Trujillo", "Tocoa", "Sonaguera", "Saba", "Bonito Oriental"],
+    "Comayagua": ["Comayagua", "Siguatepeque", "Taulabé", "El Rosario", "Ajuterique"],
+    "Copán": ["Santa Rosa de Copán", "La Entrada", "Copán Ruinas", "Florida", "Dulce Nombre"],
+    "Cortés": ["San Pedro Sula", "Choloma", "Puerto Cortés", "Villanueva", "La Lima", "Omoa", "Pimienta"],
+    "El Paraíso": ["Danlí", "El Paraíso", "Trojes", "Morocelí", "Yuscarán"],
+    "Francisco Morazán": ["Distrito Central (Tegucigalpa)", "Valle de Ángeles", "Santa Lucía", "Talanga", "Guaimaca", "Tatumbla", "Ojojona"],
+    "Gracias a Dios": ["Puerto Lempira", "Brus Laguna", "Ahuas", "Villeda Morales"],
+    "Intibucá": ["La Esperanza", "Intibucá", "Jesús de Otoro", "Yamaranguila"],
+    "Islas de la Bahía": ["Roatán", "Guanaja", "Útila", "José Santos Guardiola"],
+    "La Paz": ["La Paz", "Marcala", "Tutule", "Santa María"],
+    "Lempira": ["Gracias", "Erandique", "Lepaera", "San Juan"],
+    "Ocotepeque": ["Nueva Ocotepeque", "San Marcos", "Sinuapa"],
+    "Olancho": ["Juticalpa", "Catacamas", "Campamento", "Santa María del Real"],
+    "Santa Bárbara": ["Santa Bárbara", "Quimistán", "Macuelizo", "Trinidad", "San Marcos"],
+    "Valle": ["Nacaome", "San Lorenzo", "Amapala", "Goascorán"],
+    "Yoro": ["Yoro", "El Progreso", "Olanchito", "Morazán", "Santa Rita", "Victoria"]
+};
 
+// Checkout Lógica
+const checkoutModal = document.getElementById('checkout-modal');
+const checkoutBtn = document.getElementById('checkout-btn');
+const closeCheckoutBtn = document.getElementById('close-checkout');
+const checkoutForm = document.getElementById('checkout-form');
+const chkDepto = document.getElementById('chk-depto');
+const chkMuni = document.getElementById('chk-muni');
+
+if (chkDepto) {
+    // Llenar Departamentos
+    Object.keys(hnLocations).sort().forEach(depto => {
+        const option = document.createElement('option');
+        option.value = depto;
+        option.textContent = depto;
+        chkDepto.appendChild(option);
+    });
+
+    // Dinamismo de Municipios
+    chkDepto.addEventListener('change', (e) => {
+        const depto = e.target.value;
+        chkMuni.innerHTML = '<option value="">Seleccione...</option>';
+        if (depto && hnLocations[depto]) {
+            chkMuni.disabled = false;
+            hnLocations[depto].sort().forEach(muni => {
+                const opt = document.createElement('option');
+                opt.value = muni;
+                opt.textContent = muni;
+                chkMuni.appendChild(opt);
+            });
+        } else {
+            chkMuni.disabled = true;
+        }
+    });
+
+    // Abrir Modal
+    checkoutBtn.addEventListener('click', () => {
+        if (cart.length === 0) {
+            alert('¡El carrito está vacío! Por favor agrega productos primero.');
+            return;
+        }
+        checkoutModal.style.display = 'flex';
+    });
+
+    // Cerrar Modal
+    closeCheckoutBtn.addEventListener('click', () => {
+        checkoutModal.style.display = 'none';
+    });
+    checkoutModal.addEventListener('click', (e) => {
+        if (e.target === checkoutModal) checkoutModal.style.display = 'none';
+    });
+
+    // Procesar Formulario
+    checkoutForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('chk-name').value;
+        const phone = document.getElementById('chk-phone').value;
+        const email = document.getElementById('chk-email').value;
+        const depto = chkDepto.value;
+        const muni = chkMuni.value;
+        const address = document.getElementById('chk-address').value;
+        const notes = document.getElementById('chk-notes').value;
+        
+        let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        // Construir mensaje de WhatsApp
+        let message = `🛒 *Nuevo Pedido - Abre Caminos*\n\n`;
+        message += `*CLIENTE:*\n`;
+        message += `👤 Nombre: ${name}\n`;
+        message += `📞 Teléfono: ${phone}\n`;
+        if (email) message += `✉️ Correo: ${email}\n`;
+        message += `\n*DIRECCIÓN DE ENVÍO:*\n`;
+        message += `📍 ${depto}, ${muni}\n`;
+        message += `🏠 Dir: ${address}\n`;
+        if (notes) message += `📝 Notas: ${notes}\n`;
+        
+        message += `\n*RESUMEN DEL PEDIDO:*\n`;
+        cart.forEach(item => {
+            message += `🌱 ${item.quantity}x ${item.name} (L. ${item.price})\n`;
+        });
+        message += `\n*TOTAL A PAGAR: L. ${total.toFixed(2)}*\n\n`;
+        message += `Quedo a la espera de la confirmación y método de pago. ¡Gracias!`;
+        
+        const waLink = `https://wa.me/50499999999?text=${encodeURIComponent(message)}`;
+        
+        // Vaciamos el carrito tras generar la orden
+        cart = [];
+        saveCart();
+        updateCartUI();
+        
+        checkoutModal.style.display = 'none';
+        cartDrawer.style.right = '-400px';
+        
+        // Abrir WhatsApp en nueva pestaña
+        window.open(waLink, '_blank');
+    });
+}
+
+init();
