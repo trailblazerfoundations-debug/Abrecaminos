@@ -430,17 +430,41 @@ const movements = [
 const movementModal = document.getElementById('movement-modal');
 const movementForm = document.getElementById('movement-form');
 
+// --- Listeners para Filtros de Movimientos ---
+const filterMovProduct = document.getElementById('filter-mov-product');
+const filterMovType = document.getElementById('filter-mov-type');
+const filterMovUser = document.getElementById('filter-mov-user');
+
+if(filterMovProduct) filterMovProduct.addEventListener('input', renderMovements);
+if(filterMovType) filterMovType.addEventListener('change', renderMovements);
+if(filterMovUser) filterMovUser.addEventListener('input', renderMovements);
+
 function renderMovements() {
     const list = document.getElementById('movements-list');
     list.innerHTML = '';
     
-    if (movements.length === 0) {
-        list.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">No hay movimientos registrados</td></tr>';
+    let filteredMovements = movements;
+    
+    // Aplicar Filtros
+    if (filterMovProduct && filterMovProduct.value) {
+        const val = filterMovProduct.value.toLowerCase();
+        filteredMovements = filteredMovements.filter(m => m.product.toLowerCase().includes(val));
+    }
+    if (filterMovType && filterMovType.value !== 'Todos') {
+        filteredMovements = filteredMovements.filter(m => m.type === filterMovType.value);
+    }
+    if (filterMovUser && filterMovUser.value) {
+        const val = filterMovUser.value.toLowerCase();
+        filteredMovements = filteredMovements.filter(m => m.user.toLowerCase().includes(val));
+    }
+
+    if (filteredMovements.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">No hay movimientos que coincidan con los filtros</td></tr>';
         return;
     }
     
     // Sort automatically by date descending (newest first)
-    const sorted = [...movements].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...filteredMovements].sort((a, b) => new Date(b.date) - new Date(a.date));
     
     sorted.forEach(mov => {
         const row = document.createElement('tr');

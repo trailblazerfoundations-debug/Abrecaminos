@@ -155,6 +155,26 @@
             <!-- Tab: Movimientos -->
             <div id="tab-movements" class="inv-tab-content" style="display: none;">
                 <div class="stat-card">
+                    <!-- Filtros de Movimientos -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Producto</label>
+                            <input type="text" id="filter-mov-product" placeholder="Buscar producto..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; outline: none;">
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Tipo</label>
+                            <select id="filter-mov-type" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; background: white; outline: none;">
+                                <option value="Todos">Todos</option>
+                                <option value="Ingreso">Ingreso (+)</option>
+                                <option value="Egreso">Egreso (-)</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Usuario</label>
+                            <input type="text" id="filter-mov-user" placeholder="Buscar usuario..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; outline: none;">
+                        </div>
+                    </div>
+
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="text-align: left; border-bottom: 1px solid var(--border);">
