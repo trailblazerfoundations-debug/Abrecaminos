@@ -147,6 +147,79 @@ editForm.addEventListener('submit', (e) => {
 // Función global para acceso desde HTML
 window.openEditModal = openEditModal;
 
+// --- Exportación de Datos ---
+const btnExport = document.getElementById('btn-export');
+const exportOptions = document.getElementById('export-options');
+
+if (btnExport) {
+    btnExport.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportOptions.style.display = exportOptions.style.display === 'none' ? 'block' : 'none';
+    });
+}
+
+document.addEventListener('click', () => {
+    if (exportOptions) exportOptions.style.display = 'none';
+});
+
+window.exportToExcel = () => {
+    let ws = XLSX.utils.json_to_sheet(inventory.map(item => ({
+        'Producto': item.name,
+        'Categoría': item.cat,
+        'Stock': item.stock,
+        'Precio (L.)': item.price,
+        'Estado ISV': item.tax
+    })));
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+    XLSX.writeFile(wb, "Inventario_Abre_Caminos.xlsx");
+};
+
+window.exportToPDF = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Inventario - Vivero Abre Caminos", 14, 15);
+    
+    const body = inventory.map(item => [item.name, item.cat, item.stock, `L. ${item.price.toFixed(2)}`, item.tax]);
+    doc.autoTable({
+        head: [['Producto', 'Categoría', 'Stock', 'Precio', 'Estado ISV']],
+        body: body,
+        startY: 25,
+    });
+    
+    doc.save("Inventario_Abre_Caminos.pdf");
+};
+
+window.exportToWord = () => {
+    const headers = ['Producto', 'Categoría', 'Stock', 'Precio', 'Estado ISV'];
+    let tableHtml = '<table border="1" style="border-collapse: collapse; width: 100%;"><thead><tr>';
+    headers.forEach(h => { tableHtml += `<th style="padding: 8px; background-color: #f2f2f2;">${h}</th>`; });
+    tableHtml += '</tr></thead><tbody>';
+    
+    inventory.forEach(item => {
+        tableHtml += `<tr>
+            <td style="padding: 8px;">${item.name}</td>
+            <td style="padding: 8px;">${item.cat}</td>
+            <td style="padding: 8px;">${item.stock}</td>
+            <td style="padding: 8px;">L. ${item.price.toFixed(2)}</td>
+            <td style="padding: 8px;">${item.tax}</td>
+        </tr>`;
+    });
+    tableHtml += '</tbody></table>';
+
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word</title></head><body>";
+    const footer = "</body></html>";
+    const sourceHTML = header + "<h2>Inventario - Vivero Abre Caminos</h2>" + tableHtml + footer;
+
+    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+    const fileDownload = document.createElement("a");
+    document.body.appendChild(fileDownload);
+    fileDownload.href = source;
+    fileDownload.download = 'Inventario_Abre_Caminos.doc';
+    fileDownload.click();
+    document.body.removeChild(fileDownload);
+};
+
 // --- Navegación segmentada del inventario ---
 const segmentBtns = document.querySelectorAll('.segment-btn');
 const invTabContents = document.querySelectorAll('.inv-tab-content');

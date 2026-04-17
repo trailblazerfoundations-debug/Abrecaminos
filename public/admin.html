@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body style="background: #f4f7f4;">
     
@@ -82,7 +85,19 @@
                         Estado ISV
                     </button>
                 </div>
-                <button class="btn btn-primary" id="btn-action"><i data-lucide="plus"></i> <span id="btn-action-text">Nuevo Producto</span></button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="position: relative;" id="export-dropdown-container">
+                        <button class="btn" id="btn-export" style="background-color: var(--border); color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="download" style="width: 16px;"></i> Exportar
+                        </button>
+                        <div id="export-options" style="display: none; position: absolute; top: calc(100% + 5px); right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid var(--border); z-index: 100; min-width: 140px; overflow: hidden;">
+                            <button onclick="exportToExcel()" style="width: 100%; text-align: left; padding: 10px 15px; border: none; background: none; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;"><i data-lucide="file-spreadsheet" style="width: 14px; display: inline-block; margin-right: 6px;"></i> Excel</button>
+                            <button onclick="exportToPDF()" style="width: 100%; text-align: left; padding: 10px 15px; border: none; background: none; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;"><i data-lucide="file-text" style="width: 14px; display: inline-block; margin-right: 6px;"></i> PDF</button>
+                            <button onclick="exportToWord()" style="width: 100%; text-align: left; padding: 10px 15px; border: none; background: none; font-size: 0.9rem; cursor: pointer; transition: background 0.2s;"><i data-lucide="file" style="width: 14px; display: inline-block; margin-right: 6px;"></i> Word</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="btn-action"><i data-lucide="plus"></i> <span id="btn-action-text">Nuevo Producto</span></button>
+                </div>
             </div>
 
             <!-- Tab: Gestión de Inventario -->
