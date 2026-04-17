@@ -14,6 +14,10 @@ navLinks.forEach(link => {
         
         views.forEach(v => v.style.display = 'none');
         document.getElementById(`view-${targetView}`).style.display = 'block';
+
+        if (targetView === 'shipping') {
+            renderShipping();
+        }
     });
 });
 
@@ -839,4 +843,116 @@ navLinks.forEach(link => {
             setTimeout(() => renderSellers(), 50);
         }
     });
+});
+
+// --- Módulo de Envíos ---
+const shipments = [
+    { id: 'PED-1025', client: 'Carlos Martínez', address: 'Colonia Kennedy, Bloque 4', total: 1250, status: 'Pendiente' },
+    { id: 'PED-1024', client: 'Ana García', address: 'Residencial Plaza, Casa 10', total: 450, status: 'En Ruta' },
+    { id: 'PED-1023', client: 'Luis Torres', address: 'Lomas del Guijarro', total: 600, status: 'Entregado' },
+    { id: 'PED-1022', client: 'Sofía Castro', address: 'Valle de Ángeles', total: 2800, status: 'Pendiente' },
+    { id: 'PED-1021', client: 'Mario Núñez', address: 'Centro de Tegucigalpa', total: 150, status: 'En Ruta' }
+];
+
+const shippingStatusModal = document.getElementById('shipping-status-modal');
+const shippingStatusForm = document.getElementById('shipping-status-form');
+const filterShippingStatus = document.getElementById('filter-shipping-status');
+
+if(filterShippingStatus) filterShippingStatus.addEventListener('change', renderShipping);
+
+function renderShipping() {
+    const list = document.getElementById('shipping-list');
+    const filterStatus = filterShippingStatus ? filterShippingStatus.value : 'Todos';
+    list.innerHTML = '';
+    
+    let filteredShipments = shipments;
+    if (filterStatus !== 'Todos') {
+        filteredShipments = shipments.filter(s => s.status === filterStatus);
+    }
+    
+    // Update KPIs
+    const pendingCount = shipments.filter(s => s.status === 'Pendiente').length;
+    const routeCount = shipments.filter(s => s.status === 'En Ruta').length;
+    const deliveredCount = shipments.filter(s => s.status === 'Entregado').length;
+    
+    document.getElementById('kpi-shipping-pending').textContent = pendingCount;
+    document.getElementById('kpi-shipping-route').textContent = routeCount;
+    document.getElementById('kpi-shipping-delivered').textContent = deliveredCount;
+
+    if (filteredShipments.length === 0) {
+        list.innerHTML = `<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">No se encontraron envíos con estado: ${filterStatus}</td></tr>`;
+        return;
+    }
+    
+    filteredShipments.forEach((shipment) => {
+        // Encontrar index original para editar
+        const originalIndex = shipments.findIndex(s => s.id === shipment.id);
+        
+        let statusStyle = '';
+        let statusIcon = '';
+        
+        if (shipment.status === 'Pendiente') {
+            statusStyle = 'background: #fff3e0; color: #e65100;';
+            statusIcon = 'clock';
+        } else if (shipment.status === 'En Ruta') {
+            statusStyle = 'background: #fff8e1; color: #f57f17;';
+            statusIcon = 'truck';
+        } else if (shipment.status === 'Entregado') {
+            statusStyle = 'background: #e8f5e9; color: #2e7d32;';
+            statusIcon = 'check-circle';
+        }
+
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #f0f0f0';
+        row.innerHTML = `
+            <td style="padding: 15px; font-weight: 600; color: var(--text-main);">${shipment.id}</td>
+            <td style="padding: 15px; font-weight: 500;">${shipment.client}</td>
+            <td style="padding: 15px; color: var(--text-muted); font-size: 0.9rem;">
+                <i data-lucide="map-pin" style="width: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>${shipment.address}
+            </td>
+            <td style="padding: 15px; font-weight: 600;">L. ${shipment.total.toFixed(2)}</td>
+            <td style="padding: 15px;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; ${statusStyle}">
+                    <i data-lucide="${statusIcon}" style="width: 12px; height: 12px;"></i> ${shipment.status}
+                </span>
+            </td>
+            <td style="padding: 15px;">
+                <button onclick="openShippingModal(${originalIndex})" class="btn" style="padding: 6px 12px; font-size: 0.85rem; background: var(--border); border: none;">
+                    Actualizar
+                </button>
+            </td>
+        `;
+        list.appendChild(row);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// Shipping Modal Logic
+window.openShippingModal = function(index) {
+    const shipment = shipments[index];
+    document.getElementById('edit-ship-index').value = index;
+    document.getElementById('edit-ship-status').value = shipment.status;
+    shippingStatusModal.classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+function closeShippingModal() {
+    shippingStatusModal.classList.remove('open');
+}
+
+document.getElementById('close-shipping-status-modal').addEventListener('click', closeShippingModal);
+document.getElementById('cancel-shipping-status').addEventListener('click', closeShippingModal);
+shippingStatusModal.addEventListener('click', (e) => {
+    if (e.target === shippingStatusModal) closeShippingModal();
+});
+
+shippingStatusForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('edit-ship-index').value);
+    const newStatus = document.getElementById('edit-ship-status').value;
+    
+    shipments[index].status = newStatus;
+    
+    closeShippingModal();
+    renderShipping();
 });
