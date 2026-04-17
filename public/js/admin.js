@@ -69,11 +69,58 @@ function formatPrice(amount) {
     return `L. ${priceFormatter.format(amount)}`;
 }
 
+// --- Filtros de Inventario ---
+const filterInvProduct = document.getElementById('filter-inv-product');
+const filterInvCat = document.getElementById('filter-inv-cat');
+const filterInvStock = document.getElementById('filter-inv-stock');
+const filterInvPrice = document.getElementById('filter-inv-price');
+
+if(filterInvProduct) filterInvProduct.addEventListener('input', renderInventory);
+if(filterInvCat) filterInvCat.addEventListener('change', renderInventory);
+if(filterInvStock) filterInvStock.addEventListener('change', renderInventory);
+if(filterInvPrice) filterInvPrice.addEventListener('change', renderInventory);
+
 function renderInventory() {
     const list = document.getElementById('inventory-list');
     list.innerHTML = '';
     
-    inventory.forEach((item, index) => {
+    let filteredInventory = [...inventory];
+    
+    // Filtro por Producto
+    if (filterInvProduct && filterInvProduct.value) {
+        const val = filterInvProduct.value.toLowerCase();
+        filteredInventory = filteredInventory.filter(item => item.name.toLowerCase().includes(val));
+    }
+    // Filtro por Categoría
+    if (filterInvCat && filterInvCat.value !== 'Todas') {
+        filteredInventory = filteredInventory.filter(item => item.cat === filterInvCat.value);
+    }
+    // Filtro por Stock
+    if (filterInvStock && filterInvStock.value !== 'Todos') {
+        if (filterInvStock.value === 'Critico') {
+            filteredInventory = filteredInventory.filter(item => item.stock <= 5);
+        } else if (filterInvStock.value === 'Normal') {
+            filteredInventory = filteredInventory.filter(item => item.stock > 5);
+        }
+    }
+    // Orden por Precio
+    if (filterInvPrice && filterInvPrice.value !== 'Default') {
+        if (filterInvPrice.value === 'Asc') {
+            filteredInventory.sort((a, b) => a.price - b.price);
+        } else if (filterInvPrice.value === 'Desc') {
+            filteredInventory.sort((a, b) => b.price - a.price);
+        }
+    }
+
+    if (filteredInventory.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">No se encontraron productos con estos filtros</td></tr>';
+        return;
+    }
+
+    filteredInventory.forEach((item) => {
+        // Find real index for editing
+        const index = inventory.findIndex(i => i.name === item.name);
+        
         const row = document.createElement('tr');
         row.style.borderBottom = '1px solid #f0f0f0';
         

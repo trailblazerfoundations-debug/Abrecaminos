@@ -107,6 +107,44 @@
             <!-- Tab: Gestión de Inventario -->
             <div id="tab-inventory" class="inv-tab-content">
                 <div class="stat-card">
+                    <!-- Filtros de Inventario -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Producto</label>
+                            <div style="position: relative;">
+                                <i data-lucide="search" style="position: absolute; left: 10px; top: 9px; width: 16px; color: #888;"></i>
+                                <input type="text" id="filter-inv-product" placeholder="Buscar nombre..." style="width: 100%; padding: 8px 12px 8px 34px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; outline: none; transition: border-color 0.2s;">
+                            </div>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Categoría</label>
+                            <select id="filter-inv-cat" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; background: white; outline: none;">
+                                <option value="Todas">Todas</option>
+                                <!-- Se puede popular dinámicamente si hay más, usaremos las básicas de demo -->
+                                <option value="Interior">Interior</option>
+                                <option value="Exterior">Exterior</option>
+                                <option value="Sustratos">Sustratos</option>
+                                <option value="Herramientas">Herramientas</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Stock</label>
+                            <select id="filter-inv-stock" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; background: white; outline: none;">
+                                <option value="Todos">Cualquiera</option>
+                                <option value="Critico">Bajo / Crítico (≤ 5)</option>
+                                <option value="Normal">Normal (> 5)</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Precio (Orden)</label>
+                            <select id="filter-inv-price" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; background: white; outline: none;">
+                                <option value="Default">Por Defecto</option>
+                                <option value="Asc">Menor a Mayor</option>
+                                <option value="Desc">Mayor a Menor</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="text-align: left; border-bottom: 1px solid var(--border);">
