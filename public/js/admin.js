@@ -59,6 +59,16 @@ const inventory = [
     { name: 'Palmera Real', cat: 'Exterior', stock: 3, price: 1500, tax: 'Gravado (15%)' }
 ];
 
+// Formato de moneda con separador de miles
+const priceFormatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
+
+function formatPrice(amount) {
+    return `L. ${priceFormatter.format(amount)}`;
+}
+
 function renderInventory() {
     const list = document.getElementById('inventory-list');
     list.innerHTML = '';
@@ -74,7 +84,7 @@ function renderInventory() {
             <td style="padding: 15px; font-weight: 500;">${item.name}</td>
             <td style="padding: 15px;">${item.cat}</td>
             <td style="padding: 15px; color: ${stockColor}">${item.stock} ${stockIcon}</td>
-            <td style="padding: 15px;">L. ${item.price}</td>
+            <td style="padding: 15px; white-space: nowrap;">${formatPrice(item.price)}</td>
             <td style="padding: 15px;">
                 <span style="background: ${item.tax === 'Exento' ? '#e8f3e9' : '#f0f0f0'}; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">
                     ${item.tax}
