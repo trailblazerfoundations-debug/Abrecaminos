@@ -150,6 +150,37 @@ window.openEditModal = openEditModal;
 // --- Navegación segmentada del inventario ---
 const segmentBtns = document.querySelectorAll('.segment-btn');
 const invTabContents = document.querySelectorAll('.inv-tab-content');
+const btnAction = document.getElementById('btn-action');
+const btnActionText = document.getElementById('btn-action-text');
+
+// Datos de categorías independientes
+const categories = [
+    { name: 'Interior', icon: 'home', color: '#4B7C42' },
+    { name: 'Exterior', icon: 'sun', color: '#E8A838' },
+    { name: 'Sustratos', icon: 'layers', color: '#A4C639' },
+    { name: 'Herramientas', icon: 'wrench', color: '#6B8E9B' }
+];
+
+let activeTab = 'tab-inventory';
+
+function updateActionButton(tab) {
+    activeTab = tab;
+    if (tab === 'tab-categories') {
+        btnActionText.textContent = 'Nueva Categoría';
+    } else if (tab === 'tab-isv') {
+        btnActionText.textContent = 'Nuevo Estado ISV';
+    } else {
+        btnActionText.textContent = 'Nuevo Producto';
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+btnAction.addEventListener('click', () => {
+    if (activeTab === 'tab-categories') {
+        openCategoryModal();
+    }
+    // Otras acciones para otros tabs se pueden añadir aquí
+});
 
 segmentBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -159,6 +190,8 @@ segmentBtns.forEach(btn => {
         invTabContents.forEach(tab => tab.style.display = 'none');
         document.getElementById(btn.dataset.invTab).style.display = 'block';
         
+        updateActionButton(btn.dataset.invTab);
+        
         // Renderizar contenido de la pestaña activa
         if (btn.dataset.invTab === 'tab-categories') renderCategories();
         if (btn.dataset.invTab === 'tab-isv') renderISV();
@@ -167,67 +200,100 @@ segmentBtns.forEach(btn => {
     });
 });
 
-// --- Tab: Categorías ---
+// --- Tab: Categorías (formato lista) ---
 function renderCategories() {
-    const grid = document.getElementById('categories-grid');
-    grid.innerHTML = '';
+    const list = document.getElementById('categories-list');
+    list.innerHTML = '';
     
-    const catMap = {};
-    inventory.forEach(item => {
-        if (!catMap[item.cat]) catMap[item.cat] = [];
-        catMap[item.cat].push(item);
-    });
-    
-    const catIcons = {
-        'Interior': 'home',
-        'Exterior': 'sun',
-        'Sustratos': 'layers',
-        'Herramientas': 'wrench'
-    };
-    
-    const catColors = {
-        'Interior': '#4B7C42',
-        'Exterior': '#E8A838',
-        'Sustratos': '#A4C639',
-        'Herramientas': '#6B8E9B'
-    };
-    
-    Object.keys(catMap).forEach(cat => {
-        const items = catMap[cat];
+    categories.forEach((cat, index) => {
+        const items = inventory.filter(item => item.cat === cat.name);
         const totalStock = items.reduce((sum, i) => sum + i.stock, 0);
-        const icon = catIcons[cat] || 'tag';
-        const color = catColors[cat] || '#888';
         
-        const card = document.createElement('div');
-        card.className = 'stat-card';
-        card.style.position = 'relative';
-        card.style.overflow = 'hidden';
-        card.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
-                <div style="width: 44px; height: 44px; border-radius: 10px; background: ${color}15; display: flex; align-items: center; justify-content: center;">
-                    <i data-lucide="${icon}" style="width: 22px; height: 22px; color: ${color};"></i>
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #f0f0f0';
+        row.innerHTML = `
+            <td style="padding: 15px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: ${cat.color}15; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="${cat.icon}" style="width: 18px; height: 18px; color: ${cat.color};"></i>
+                    </div>
+                    <span style="font-weight: 600;">${cat.name}</span>
                 </div>
-                <div>
-                    <h4 style="font-size: 1.1rem; margin: 0;">${cat}</h4>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">${items.length} producto${items.length > 1 ? 's' : ''}</span>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border);">
-                <div>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">Stock total</span>
-                    <p style="font-weight: 700; font-size: 1.3rem; margin: 0; color: ${totalStock < 10 ? '#ff4d4d' : 'var(--primary)'};">${totalStock}</p>
-                </div>
-                <div style="text-align: right;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">Productos</span>
-                    <p style="font-weight: 600; font-size: 0.85rem; margin: 0;">${items.map(i => i.name).join(', ')}</p>
-                </div>
-            </div>
+            </td>
+            <td style="padding: 15px;">
+                <span style="background: var(--border); padding: 3px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;">${items.length}</span>
+            </td>
+            <td style="padding: 15px; font-weight: 600; color: ${totalStock < 10 ? '#ff4d4d' : 'var(--primary)'};">
+                ${totalStock}
+            </td>
+            <td style="padding: 15px; font-size: 0.85rem; color: var(--text-muted);">
+                ${items.length > 0 ? items.map(i => i.name).join(', ') : '<em>Sin productos</em>'}
+            </td>
+            <td style="padding: 15px;">
+                <button onclick="deleteCategory(${index})" style="background: none; border: none; cursor: pointer; color: #ff6b6b; padding: 6px; border-radius: 6px;" title="Eliminar categoría">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                </button>
+            </td>
         `;
-        grid.appendChild(card);
+        list.appendChild(row);
     });
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+
+// --- Modal de Nueva Categoría ---
+const categoryModal = document.getElementById('category-modal');
+const categoryForm = document.getElementById('category-form');
+
+function openCategoryModal() {
+    document.getElementById('cat-name').value = '';
+    document.getElementById('cat-icon').value = 'home';
+    categoryModal.classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeCategoryModal() {
+    categoryModal.classList.remove('open');
+}
+
+document.getElementById('close-cat-modal').addEventListener('click', closeCategoryModal);
+document.getElementById('cancel-cat').addEventListener('click', closeCategoryModal);
+categoryModal.addEventListener('click', (e) => {
+    if (e.target === categoryModal) closeCategoryModal();
+});
+
+categoryForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('cat-name').value.trim();
+    const icon = document.getElementById('cat-icon').value;
+    
+    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+        alert('Ya existe una categoría con ese nombre.');
+        return;
+    }
+    
+    const colors = ['#4B7C42', '#E8A838', '#A4C639', '#6B8E9B', '#9C6ADE', '#E85D75', '#38B2AC'];
+    const color = colors[categories.length % colors.length];
+    
+    categories.push({ name, icon, color });
+    closeCategoryModal();
+    renderCategories();
+});
+
+window.deleteCategory = (index) => {
+    const cat = categories[index];
+    const hasProducts = inventory.some(item => item.cat === cat.name);
+    
+    if (hasProducts) {
+        alert(`No se puede eliminar "${cat.name}" porque tiene productos asociados.`);
+        return;
+    }
+    
+    if (confirm(`¿Eliminar la categoría "${cat.name}"?`)) {
+        categories.splice(index, 1);
+        renderCategories();
+    }
+};
 
 // --- Tab: Estado ISV ---
 function renderISV() {
