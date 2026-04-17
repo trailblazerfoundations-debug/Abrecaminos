@@ -111,6 +111,8 @@ function renderInventory() {
             filteredInventory.sort((a, b) => b.price - a.price);
         }
     }
+    
+    window.currentFilteredInventory = filteredInventory;
 
     if (filteredInventory.length === 0) {
         list.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">No se encontraron productos con estos filtros</td></tr>';
@@ -209,60 +211,109 @@ document.addEventListener('click', () => {
     if (exportOptions) exportOptions.style.display = 'none';
 });
 
+function getExportContext() {
+    let headers = [];
+    let title = "";
+    let formattedData = [];
+    
+    if (activeTab === 'tab-inventory') {
+        title = "Inventario de Productos";
+        headers = ['Producto', 'Categoría', 'Stock', 'Precio (L.)', 'Estado ISV'];
+        const dataToExport = window.currentFilteredInventory || inventory;
+        formattedData = dataToExport.map(item => [
+            item.name, item.cat, item.stock, formatPrice(item.price).replace('L. ', 'L.'), item.tax
+        ]);
+        
+    } else if (activeTab === 'tab-categories') {
+        title = "Inventario por Categorías";
+        headers = ['Categoría', 'Cantidad de Productos', 'Stock Total'];
+        formattedData = categories.map(cat => {
+            const items = (window.currentFilteredInventory || inventory).filter(item => item.cat === cat.name);
+            const totalStock = items.reduce((sum, i) => sum + i.stock, 0);
+            return [cat.name, items.length, totalStock];
+        });
+        
+    } else if (activeTab === 'tab-isv') {
+        title = "Reporte de Estado ISV";
+        headers = ['Estado ISV', 'Cantidad de Productos', 'Valor Total en Inventario'];
+        const isvTypes = [...new Set(inventory.map(i => i.tax))];
+        formattedData = isvTypes.map(type => {
+            const items = (window.currentFilteredInventory || inventory).filter(item => item.tax === type);
+            const totalValue = items.reduce((sum, i) => sum + (i.price * i.stock), 0);
+            return [type, items.length, formatPrice(totalValue).replace('L. ', 'L.')];
+        });
+        
+    } else if (activeTab === 'tab-movements') {
+        title = "Reporte de Movimientos de Inventario";
+        headers = ['Fecha', 'Producto', 'Tipo', 'Cantidad', 'Usuario', 'Motivo'];
+        const dataToExport = window.currentFilteredMovements || movements;
+        formattedData = dataToExport.map(mov => {
+            const dateObj = new Date(mov.date);
+            const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const sign = mov.type === 'Ingreso' ? '+' : '-';
+            return [dateStr, mov.product, mov.type, `${sign}${mov.qty}`, mov.user, mov.reason];
+        });
+    }
+    
+    // For Excel
+    const jsonData = formattedData.map(rowGroup => {
+        let obj = {};
+        headers.forEach((h, i) => {
+            obj[h] = rowGroup[i];
+        });
+        return obj;
+    });
+
+    return { title, headers, body: formattedData, jsonData };
+}
+
 window.exportToExcel = () => {
-    let ws = XLSX.utils.json_to_sheet(inventory.map(item => ({
-        'Producto': item.name,
-        'Categoría': item.cat,
-        'Stock': item.stock,
-        'Precio (L.)': item.price,
-        'Estado ISV': item.tax
-    })));
+    const { title, jsonData } = getExportContext();
+    let ws = XLSX.utils.json_to_sheet(jsonData);
     let wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-    XLSX.writeFile(wb, "Inventario_Abre_Caminos.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+    XLSX.writeFile(wb, `${title.replace(/ /g, '_')}.xlsx`);
 };
 
 window.exportToPDF = () => {
+    const { title, headers, body } = getExportContext();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.text("Inventario - Vivero Abre Caminos", 14, 15);
+    doc.text(`${title} - Vivero Abre Caminos`, 14, 15);
     
-    const body = inventory.map(item => [item.name, item.cat, item.stock, `L. ${item.price.toFixed(2)}`, item.tax]);
     doc.autoTable({
-        head: [['Producto', 'Categoría', 'Stock', 'Precio', 'Estado ISV']],
+        head: [headers],
         body: body,
         startY: 25,
     });
     
-    doc.save("Inventario_Abre_Caminos.pdf");
+    doc.save(`${title.replace(/ /g, '_')}.pdf`);
 };
 
 window.exportToWord = () => {
-    const headers = ['Producto', 'Categoría', 'Stock', 'Precio', 'Estado ISV'];
+    const { title, headers, body } = getExportContext();
     let tableHtml = '<table border="1" style="border-collapse: collapse; width: 100%;"><thead><tr>';
     headers.forEach(h => { tableHtml += `<th style="padding: 8px; background-color: #f2f2f2;">${h}</th>`; });
     tableHtml += '</tr></thead><tbody>';
     
-    inventory.forEach(item => {
-        tableHtml += `<tr>
-            <td style="padding: 8px;">${item.name}</td>
-            <td style="padding: 8px;">${item.cat}</td>
-            <td style="padding: 8px;">${item.stock}</td>
-            <td style="padding: 8px;">L. ${item.price.toFixed(2)}</td>
-            <td style="padding: 8px;">${item.tax}</td>
-        </tr>`;
+    body.forEach(row => {
+        tableHtml += `<tr>`;
+        row.forEach(cell => {
+            tableHtml += `<td style="padding: 8px;">${cell}</td>`;
+        });
+        tableHtml += `</tr>`;
     });
     tableHtml += '</tbody></table>';
 
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word</title></head><body>";
-    const footer = "</body></html>";
-    const sourceHTML = header + "<h2>Inventario - Vivero Abre Caminos</h2>" + tableHtml + footer;
+    const headerHTML = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word</title></head><body>";
+    const footerHTML = "</body></html>";
+    const sourceHTML = headerHTML + `<h2>${title} - Vivero Abre Caminos</h2><br>` + tableHtml + footerHTML;
 
     const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
     const fileDownload = document.createElement("a");
     document.body.appendChild(fileDownload);
     fileDownload.href = source;
-    fileDownload.download = 'Inventario_Abre_Caminos.doc';
+    fileDownload.download = `${title.replace(/ /g, '_')}.doc`;
     fileDownload.click();
     document.body.removeChild(fileDownload);
 };
@@ -512,6 +563,7 @@ function renderMovements() {
     
     // Sort automatically by date descending (newest first)
     const sorted = [...filteredMovements].sort((a, b) => new Date(b.date) - new Date(a.date));
+    window.currentFilteredMovements = sorted;
     
     sorted.forEach(mov => {
         const row = document.createElement('tr');
