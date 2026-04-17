@@ -242,6 +242,8 @@ function updateActionButton(tab) {
         btnActionText.textContent = 'Nueva Categoría';
     } else if (tab === 'tab-isv') {
         btnActionText.textContent = 'Nuevo Estado ISV';
+    } else if (tab === 'tab-movements') {
+        btnActionText.textContent = 'Nuevo Movimiento';
     } else {
         btnActionText.textContent = 'Nuevo Producto';
     }
@@ -251,6 +253,8 @@ function updateActionButton(tab) {
 btnAction.addEventListener('click', () => {
     if (activeTab === 'tab-categories') {
         openCategoryModal();
+    } else if (activeTab === 'tab-movements') {
+        openMovementModal();
     }
     // Otras acciones para otros tabs se pueden añadir aquí
 });
@@ -268,6 +272,7 @@ segmentBtns.forEach(btn => {
         // Renderizar contenido de la pestaña activa
         if (btn.dataset.invTab === 'tab-categories') renderCategories();
         if (btn.dataset.invTab === 'tab-isv') renderISV();
+        if (btn.dataset.invTab === 'tab-movements') renderMovements();
         
         if (typeof lucide !== 'undefined') lucide.createIcons();
     });
@@ -414,6 +419,119 @@ function renderISV() {
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+
+// --- Tab: Movimientos ---
+const movements = [
+    { date: '2023-10-12T10:30:00', product: 'Monstera Deliciosa', type: 'Ingreso', qty: 10, user: 'Admin', reason: 'Compra a proveedor' },
+    { date: '2023-10-14T14:15:00', product: 'Sustrato Orgánico', type: 'Egreso', qty: 2, user: 'Admin', reason: 'Uso interno vivero' },
+    { date: '2023-10-15T09:00:00', product: 'Palmera Real', type: 'Ingreso', qty: 5, user: 'Admin', reason: 'Producción propia' }
+];
+
+const movementModal = document.getElementById('movement-modal');
+const movementForm = document.getElementById('movement-form');
+
+function renderMovements() {
+    const list = document.getElementById('movements-list');
+    list.innerHTML = '';
+    
+    if (movements.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted);">No hay movimientos registrados</td></tr>';
+        return;
+    }
+    
+    // Sort automatically by date descending (newest first)
+    const sorted = [...movements].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    sorted.forEach(mov => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #f0f0f0';
+        
+        const dateObj = new Date(mov.date);
+        const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        const typeColor = mov.type === 'Ingreso' ? 'var(--primary)' : '#cc3333';
+        const typeBg = mov.type === 'Ingreso' ? '#e8f3e9' : '#fce8e8';
+        const typeIcon = mov.type === 'Ingreso' ? 'arrow-down-to-line' : 'arrow-up-from-line';
+        const sign = mov.type === 'Ingreso' ? '+' : '-';
+        
+        row.innerHTML = `
+            <td style="padding: 15px; font-size: 0.9rem; color: var(--text-muted);">${dateStr}</td>
+            <td style="padding: 15px; font-weight: 500;">${mov.product}</td>
+            <td style="padding: 15px;">
+                <span style="display: inline-flex; align-items: center; gap: 4px; background: ${typeBg}; color: ${typeColor}; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">
+                    <i data-lucide="${typeIcon}" style="width: 12px; height: 12px;"></i> ${mov.type}
+                </span>
+            </td>
+            <td style="padding: 15px; font-weight: 700; color: ${typeColor};">${sign}${mov.qty}</td>
+            <td style="padding: 15px; font-size: 0.9rem; color: #555;"><i data-lucide="user" style="width: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>${mov.user}</td>
+            <td style="padding: 15px; font-size: 0.85rem; color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${mov.reason}">${mov.reason}</td>
+        `;
+        list.appendChild(row);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function openMovementModal() {
+    const productSelect = document.getElementById('mov-product');
+    productSelect.innerHTML = '<option value="">Seleccione un producto...</option>';
+    inventory.forEach(item => {
+        productSelect.innerHTML += `<option value="${item.name}">${item.name} (Stock actual: ${item.stock})</option>`;
+    });
+    
+    movementForm.reset();
+    movementModal.classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeMovementModal() {
+    movementModal.classList.remove('open');
+}
+
+document.getElementById('close-movement-modal').addEventListener('click', closeMovementModal);
+document.getElementById('cancel-movement').addEventListener('click', closeMovementModal);
+movementModal.addEventListener('click', (e) => {
+    if (e.target === movementModal) closeMovementModal();
+});
+
+movementForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const productName = document.getElementById('mov-product').value;
+    const type = document.getElementById('mov-type').value;
+    const qty = parseInt(document.getElementById('mov-qty').value);
+    const reason = document.getElementById('mov-reason').value;
+    
+    if (!productName || qty <= 0) return;
+    
+    // Check stock for egesos
+    const productIndex = inventory.findIndex(i => i.name === productName);
+    if (productIndex === -1) return;
+    
+    if (type === 'Egreso' && inventory[productIndex].stock < qty) {
+        alert('Stock insuficiente para realizar este egreso.');
+        return;
+    }
+    
+    // Register movement
+    movements.push({
+        date: new Date().toISOString(),
+        product: productName,
+        type: type,
+        qty: qty,
+        user: 'Admin', // Static for now, could be dynamic later
+        reason: reason
+    });
+    
+    // Update inventory stock
+    if (type === 'Ingreso') {
+        inventory[productIndex].stock += qty;
+    } else {
+        inventory[productIndex].stock -= qty;
+    }
+    
+    closeMovementModal();
+    renderMovements();
+    renderInventory();
+});
 
 // Init
 initCharts();
