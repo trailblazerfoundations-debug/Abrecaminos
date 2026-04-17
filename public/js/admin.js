@@ -345,3 +345,184 @@ function renderISV() {
 // Init
 initCharts();
 renderInventory();
+
+// ============================================
+// MÓDULO DE VENDEDORES
+// ============================================
+
+const sellers = [
+    { name: 'María López', phone: '9876-5432', email: 'maria@vivero.com', commission: 5, status: 'Activo', salesMonth: 12500, salesCount: 28 },
+    { name: 'Carlos Reyes', phone: '9812-3456', email: 'carlos@vivero.com', commission: 4, status: 'Activo', salesMonth: 8900, salesCount: 19 },
+    { name: 'Ana Flores', phone: '9945-6789', email: 'ana@vivero.com', commission: 5, status: 'Inactivo', salesMonth: 0, salesCount: 0 },
+    { name: 'José Martínez', phone: '9901-2345', email: 'jose@vivero.com', commission: 6, status: 'Activo', salesMonth: 15200, salesCount: 34 }
+];
+
+const sellerModal = document.getElementById('seller-modal');
+const sellerForm = document.getElementById('seller-form');
+
+function renderSellersKPIs() {
+    const kpisContainer = document.getElementById('sellers-kpis');
+    
+    const totalSellers = sellers.length;
+    const activeSellers = sellers.filter(s => s.status === 'Activo').length;
+    const totalSalesMonth = sellers.reduce((sum, s) => sum + s.salesMonth, 0);
+    const totalCommissions = sellers.reduce((sum, s) => sum + (s.salesMonth * s.commission / 100), 0);
+    
+    kpisContainer.innerHTML = `
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Total Vendedores</span>
+            <span style="font-size: 2rem; font-weight: 700; color: var(--primary);">${totalSellers}</span>
+            <span style="font-size: 0.8rem; color: #25D366;">${activeSellers} activos</span>
+        </div>
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Ventas del Mes</span>
+            <span style="font-size: 2rem; font-weight: 700; color: var(--primary); white-space: nowrap;">${formatPrice(totalSalesMonth)}</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">${sellers.reduce((s, v) => s + v.salesCount, 0)} transacciones</span>
+        </div>
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Comisiones Acumuladas</span>
+            <span style="font-size: 2rem; font-weight: 700; color: #E8A838; white-space: nowrap;">${formatPrice(totalCommissions)}</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Por pagar</span>
+        </div>
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Mejor Vendedor</span>
+            <span style="font-size: 1.3rem; font-weight: 700; color: var(--primary);">${sellers.length > 0 ? sellers.reduce((best, s) => s.salesMonth > best.salesMonth ? s : best, sellers[0]).name : 'N/A'}</span>
+            <span style="font-size: 0.8rem; color: #25D366;">🏆 Top del mes</span>
+        </div>
+    `;
+}
+
+function renderSellers() {
+    renderSellersKPIs();
+    
+    const list = document.getElementById('sellers-list');
+    list.innerHTML = '';
+    
+    if (sellers.length === 0) {
+        list.innerHTML = '<tr><td colspan="7" style="padding: 40px; text-align: center; color: var(--text-muted);">No hay vendedores registrados</td></tr>';
+        return;
+    }
+    
+    sellers.forEach((seller, index) => {
+        const commissionAmount = seller.salesMonth * seller.commission / 100;
+        const isTop = sellers.length > 0 && seller === sellers.reduce((best, s) => s.salesMonth > best.salesMonth ? s : best, sellers[0]) && seller.salesMonth > 0;
+        
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #f0f0f0';
+        row.innerHTML = `
+            <td style="padding: 15px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: ${seller.status === 'Activo' ? 'var(--primary)' : '#ccc'}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem;">
+                        ${seller.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </div>
+                    <div>
+                        <span style="font-weight: 600;">${seller.name}</span>${isTop ? ' <span style="font-size: 0.75rem;">🏆</span>' : ''}
+                        <br><span style="font-size: 0.8rem; color: var(--text-muted);">${seller.email}</span>
+                    </div>
+                </div>
+            </td>
+            <td style="padding: 15px;">${seller.phone}</td>
+            <td style="padding: 15px;">
+                <span style="background: #f0f7ee; padding: 3px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; color: var(--primary);">${seller.commission}%</span>
+            </td>
+            <td style="padding: 15px; white-space: nowrap; font-weight: 600;">${formatPrice(seller.salesMonth)}</td>
+            <td style="padding: 15px; white-space: nowrap; font-weight: 600; color: #E8A838;">${formatPrice(commissionAmount)}</td>
+            <td style="padding: 15px;">
+                <span style="background: ${seller.status === 'Activo' ? '#e8f3e9' : '#fce8e8'}; color: ${seller.status === 'Activo' ? '#2D4628' : '#cc3333'}; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+                    ${seller.status}
+                </span>
+            </td>
+            <td style="padding: 15px;">
+                <div style="display: flex; gap: 6px;">
+                    <button onclick="openSellerModal(${index})" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 6px; border-radius: 6px;" title="Editar">
+                        <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                    </button>
+                    <button onclick="deleteSeller(${index})" style="background: none; border: none; cursor: pointer; color: #ff6b6b; padding: 6px; border-radius: 6px;" title="Eliminar">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        list.appendChild(row);
+    });
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// --- Modal de Vendedor ---
+function openSellerModal(index = -1) {
+    document.getElementById('seller-index').value = index;
+    
+    if (index >= 0) {
+        const s = sellers[index];
+        document.getElementById('seller-modal-title').textContent = 'Editar Vendedor';
+        document.getElementById('seller-submit-btn').textContent = 'Guardar Cambios';
+        document.getElementById('seller-name').value = s.name;
+        document.getElementById('seller-phone').value = s.phone;
+        document.getElementById('seller-email').value = s.email;
+        document.getElementById('seller-commission').value = s.commission;
+        document.getElementById('seller-status').value = s.status;
+    } else {
+        document.getElementById('seller-modal-title').textContent = 'Nuevo Vendedor';
+        document.getElementById('seller-submit-btn').textContent = 'Crear Vendedor';
+        sellerForm.reset();
+        document.getElementById('seller-commission').value = 5;
+    }
+    
+    sellerModal.classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeSellerModal() {
+    sellerModal.classList.remove('open');
+}
+
+document.getElementById('close-seller-modal').addEventListener('click', closeSellerModal);
+document.getElementById('cancel-seller').addEventListener('click', closeSellerModal);
+sellerModal.addEventListener('click', (e) => {
+    if (e.target === sellerModal) closeSellerModal();
+});
+
+document.getElementById('btn-new-seller').addEventListener('click', () => openSellerModal(-1));
+
+sellerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('seller-index').value);
+    
+    const data = {
+        name: document.getElementById('seller-name').value.trim(),
+        phone: document.getElementById('seller-phone').value.trim(),
+        email: document.getElementById('seller-email').value.trim(),
+        commission: parseFloat(document.getElementById('seller-commission').value),
+        status: document.getElementById('seller-status').value
+    };
+    
+    if (index >= 0) {
+        sellers[index] = { ...sellers[index], ...data };
+    } else {
+        sellers.push({ ...data, salesMonth: 0, salesCount: 0 });
+    }
+    
+    closeSellerModal();
+    renderSellers();
+});
+
+window.openSellerModal = openSellerModal;
+
+window.deleteSeller = (index) => {
+    const seller = sellers[index];
+    if (confirm(`¿Eliminar al vendedor "${seller.name}"?`)) {
+        sellers.splice(index, 1);
+        renderSellers();
+    }
+};
+
+// Renderizar vendedores cuando se active la vista
+const originalNavHandler = navLinks;
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        if (link.dataset.view === 'sellers') {
+            setTimeout(() => renderSellers(), 50);
+        }
+    });
+});
