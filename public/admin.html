@@ -117,6 +117,57 @@
         </div>
     </main>
 
+    <!-- Modal de Edición de Producto -->
+    <div id="edit-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 40px; width: 480px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h3 style="font-size: 1.3rem; margin: 0;">Editar Producto</h3>
+                <button id="close-edit-modal" style="background: none; border: none; cursor: pointer; color: #888; display: flex; align-items: center;">
+                    <i data-lucide="x" style="width: 24px; height: 24px;"></i>
+                </button>
+            </div>
+            <form id="edit-form" style="display: flex; flex-direction: column; gap: 18px;">
+                <input type="hidden" id="edit-index">
+                <div>
+                    <label style="display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main);">Nombre del Producto</label>
+                    <input type="text" id="edit-name" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; outline: none; transition: border-color 0.2s;" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main);">Categoría</label>
+                        <select id="edit-cat" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; background: white; outline: none;">
+                            <option value="Interior">Interior</option>
+                            <option value="Exterior">Exterior</option>
+                            <option value="Sustratos">Sustratos</option>
+                            <option value="Herramientas">Herramientas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main);">Estado ISV</label>
+                        <select id="edit-tax" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; background: white; outline: none;">
+                            <option value="Gravado (15%)">Gravado (15%)</option>
+                            <option value="Exento">Exento</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main);">Stock</label>
+                        <input type="number" id="edit-stock" min="0" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; outline: none;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main);">Precio (L.)</label>
+                        <input type="number" id="edit-price" min="0" step="0.01" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; outline: none;" required>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 10px;">
+                    <button type="button" id="cancel-edit" class="btn" style="flex: 1; background: var(--border); color: var(--text-main);">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <style>
         .nav-link {
             display: flex;
@@ -131,6 +182,13 @@
         .nav-link:hover, .nav-link.active {
             background: rgba(255,255,255,0.1);
             color: white;
+        }
+        #edit-modal.open {
+            display: flex;
+        }
+        #edit-form input:focus, #edit-form select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(75, 124, 66, 0.15);
         }
     </style>
 

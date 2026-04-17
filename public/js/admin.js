@@ -63,7 +63,7 @@ function renderInventory() {
     const list = document.getElementById('inventory-list');
     list.innerHTML = '';
     
-    inventory.forEach(item => {
+    inventory.forEach((item, index) => {
         const row = document.createElement('tr');
         row.style.borderBottom = '1px solid #f0f0f0';
         
@@ -81,7 +81,9 @@ function renderInventory() {
                 </span>
             </td>
             <td style="padding: 15px;">
-                <button style="background: none; border: none; cursor: pointer; color: var(--primary);"><i data-lucide="edit-2" style="width: 16px;"></i></button>
+                <button onclick="openEditModal(${index})" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 6px; border-radius: 6px; transition: background 0.2s;" title="Editar producto">
+                    <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                </button>
             </td>
         `;
         list.appendChild(row);
@@ -90,6 +92,52 @@ function renderInventory() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+// --- Modal de Edición ---
+const editModal = document.getElementById('edit-modal');
+const editForm  = document.getElementById('edit-form');
+
+function openEditModal(index) {
+    const item = inventory[index];
+    document.getElementById('edit-index').value   = index;
+    document.getElementById('edit-name').value    = item.name;
+    document.getElementById('edit-cat').value     = item.cat;
+    document.getElementById('edit-stock').value   = item.stock;
+    document.getElementById('edit-price').value   = item.price;
+    document.getElementById('edit-tax').value     = item.tax;
+    editModal.classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeEditModal() {
+    editModal.classList.remove('open');
+}
+
+document.getElementById('close-edit-modal').addEventListener('click', closeEditModal);
+document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
+
+// Cerrar al hacer click fuera del modal
+editModal.addEventListener('click', (e) => {
+    if (e.target === editModal) closeEditModal();
+});
+
+editForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('edit-index').value);
+    
+    inventory[index].name  = document.getElementById('edit-name').value.trim();
+    inventory[index].cat   = document.getElementById('edit-cat').value;
+    inventory[index].stock = parseInt(document.getElementById('edit-stock').value);
+    inventory[index].price = parseFloat(document.getElementById('edit-price').value);
+    inventory[index].tax   = document.getElementById('edit-tax').value;
+    
+    closeEditModal();
+    renderInventory();
+});
+
+// Función global para acceso desde HTML
+window.openEditModal = openEditModal;
+
 // Init
 initCharts();
 renderInventory();
+
