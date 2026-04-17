@@ -65,7 +65,9 @@
     <div id="cart-drawer" style="position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background: white; box-shadow: -10px 0 40px rgba(0,0,0,0.1); z-index: 200; transition: right 0.3s ease; padding: 40px; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h3>Tu Carrito</h3>
-            <i data-lucide="x" id="close-cart" style="cursor: pointer;"></i>
+            <div id="close-cart" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;">
+                <i data-lucide="x"></i>
+            </div>
         </div>
         <div id="cart-items" style="flex: 1; overflow-y: auto;">
             <!-- Cart items -->
