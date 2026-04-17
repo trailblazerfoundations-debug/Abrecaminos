@@ -147,7 +147,135 @@ editForm.addEventListener('submit', (e) => {
 // Función global para acceso desde HTML
 window.openEditModal = openEditModal;
 
+// --- Navegación segmentada del inventario ---
+const segmentBtns = document.querySelectorAll('.segment-btn');
+const invTabContents = document.querySelectorAll('.inv-tab-content');
+
+segmentBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        segmentBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        invTabContents.forEach(tab => tab.style.display = 'none');
+        document.getElementById(btn.dataset.invTab).style.display = 'block';
+        
+        // Renderizar contenido de la pestaña activa
+        if (btn.dataset.invTab === 'tab-categories') renderCategories();
+        if (btn.dataset.invTab === 'tab-isv') renderISV();
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+});
+
+// --- Tab: Categorías ---
+function renderCategories() {
+    const grid = document.getElementById('categories-grid');
+    grid.innerHTML = '';
+    
+    const catMap = {};
+    inventory.forEach(item => {
+        if (!catMap[item.cat]) catMap[item.cat] = [];
+        catMap[item.cat].push(item);
+    });
+    
+    const catIcons = {
+        'Interior': 'home',
+        'Exterior': 'sun',
+        'Sustratos': 'layers',
+        'Herramientas': 'wrench'
+    };
+    
+    const catColors = {
+        'Interior': '#4B7C42',
+        'Exterior': '#E8A838',
+        'Sustratos': '#A4C639',
+        'Herramientas': '#6B8E9B'
+    };
+    
+    Object.keys(catMap).forEach(cat => {
+        const items = catMap[cat];
+        const totalStock = items.reduce((sum, i) => sum + i.stock, 0);
+        const icon = catIcons[cat] || 'tag';
+        const color = catColors[cat] || '#888';
+        
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+        card.style.position = 'relative';
+        card.style.overflow = 'hidden';
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: ${color}15; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="${icon}" style="width: 22px; height: 22px; color: ${color};"></i>
+                </div>
+                <div>
+                    <h4 style="font-size: 1.1rem; margin: 0;">${cat}</h4>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">${items.length} producto${items.length > 1 ? 's' : ''}</span>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border);">
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Stock total</span>
+                    <p style="font-weight: 700; font-size: 1.3rem; margin: 0; color: ${totalStock < 10 ? '#ff4d4d' : 'var(--primary)'};">${totalStock}</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Productos</span>
+                    <p style="font-weight: 600; font-size: 0.85rem; margin: 0;">${items.map(i => i.name).join(', ')}</p>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// --- Tab: Estado ISV ---
+function renderISV() {
+    const grid = document.getElementById('isv-grid');
+    grid.innerHTML = '';
+    
+    const isvMap = {};
+    inventory.forEach(item => {
+        if (!isvMap[item.tax]) isvMap[item.tax] = [];
+        isvMap[item.tax].push(item);
+    });
+    
+    const isvStyles = {
+        'Gravado (15%)': { icon: 'percent', color: '#E8A838', bg: '#FFF8EE' },
+        'Exento': { icon: 'shield-check', color: '#4B7C42', bg: '#F0F7EE' }
+    };
+    
+    Object.keys(isvMap).forEach(tax => {
+        const items = isvMap[tax];
+        const style = isvStyles[tax] || { icon: 'tag', color: '#888', bg: '#f5f5f5' };
+        
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: ${style.bg}; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="${style.icon}" style="width: 24px; height: 24px; color: ${style.color};"></i>
+                </div>
+                <div>
+                    <h4 style="font-size: 1.15rem; margin: 0;">${tax}</h4>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">${items.length} producto${items.length > 1 ? 's' : ''}</span>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${items.map(item => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: ${style.bg}; border-radius: 8px;">
+                        <span style="font-weight: 500;">${item.name}</span>
+                        <span style="white-space: nowrap; font-weight: 600; color: var(--primary);">${formatPrice(item.price)}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 // Init
 initCharts();
 renderInventory();
-

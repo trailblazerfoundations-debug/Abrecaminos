@@ -65,27 +65,61 @@
 
         <!-- Inventory View (Hidden by default) -->
         <div id="view-inventory" class="view" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2>Gestión de Inventario</h2>
-                <button class="btn btn-primary"><i data-lucide="plus"></i> Nuevo Producto</button>
+            
+            <!-- Barra de navegación segmentada -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+                <div class="segment-bar">
+                    <button class="segment-btn active" data-inv-tab="tab-inventory">
+                        <i data-lucide="package" style="width: 16px; height: 16px;"></i>
+                        Gestión de Inventario
+                    </button>
+                    <button class="segment-btn" data-inv-tab="tab-categories">
+                        <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
+                        Categoría
+                    </button>
+                    <button class="segment-btn" data-inv-tab="tab-isv">
+                        <i data-lucide="receipt" style="width: 16px; height: 16px;"></i>
+                        Estado ISV
+                    </button>
+                </div>
+                <button class="btn btn-primary" id="btn-new-product"><i data-lucide="plus"></i> Nuevo Producto</button>
             </div>
-            <div class="stat-card">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="text-align: left; border-bottom: 1px solid var(--border);">
-                            <th style="padding: 15px;">Producto</th>
-                            <th style="padding: 15px;">Categoría</th>
-                            <th style="padding: 15px;">Stock</th>
-                            <th style="padding: 15px;">Precio</th>
-                            <th style="padding: 15px;">Estado ISV</th>
-                            <th style="padding: 15px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-list">
-                        <!-- Rows -->
-                    </tbody>
-                </table>
+
+            <!-- Tab: Gestión de Inventario -->
+            <div id="tab-inventory" class="inv-tab-content">
+                <div class="stat-card">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                                <th style="padding: 15px;">Producto</th>
+                                <th style="padding: 15px;">Categoría</th>
+                                <th style="padding: 15px;">Stock</th>
+                                <th style="padding: 15px;">Precio</th>
+                                <th style="padding: 15px;">Estado ISV</th>
+                                <th style="padding: 15px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-list">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- Tab: Categoría -->
+            <div id="tab-categories" class="inv-tab-content" style="display: none;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;" id="categories-grid">
+                    <!-- Categorías renderizadas por JS -->
+                </div>
+            </div>
+
+            <!-- Tab: Estado ISV -->
+            <div id="tab-isv" class="inv-tab-content" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;" id="isv-grid">
+                    <!-- ISV cards renderizadas por JS -->
+                </div>
+            </div>
+
         </div>
 
         <!-- Compliance View (Hidden) -->
@@ -189,6 +223,38 @@
         #edit-form input:focus, #edit-form select:focus {
             border-color: var(--primary-light);
             box-shadow: 0 0 0 3px rgba(75, 124, 66, 0.15);
+        }
+
+        /* Barra segmentada de inventario */
+        .segment-bar {
+            display: flex;
+            background: var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            gap: 4px;
+        }
+        .segment-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .segment-btn:hover {
+            color: var(--primary);
+        }
+        .segment-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
     </style>
 
